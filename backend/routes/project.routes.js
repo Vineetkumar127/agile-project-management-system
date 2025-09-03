@@ -22,7 +22,7 @@ router.get("/", authMiddleware, getProjects);
 router.get("/:id", authMiddleware, getProjectById);
 
 // ✅ Update Project
-router.put("/:id", authMiddleware, updateProject);
+router.patch("/:id", authMiddleware, updateProject);
 
 // ✅ Delete Project
 router.delete("/:id", authMiddleware, deleteProject);

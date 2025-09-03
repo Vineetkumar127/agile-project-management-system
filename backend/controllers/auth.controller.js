@@ -3,8 +3,6 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const validation = require("../utils/validation");
 
-const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-
 // -------- REGISTER ----------
 exports.register = async (req, res) => {
   try {
@@ -14,23 +12,29 @@ exports.register = async (req, res) => {
 
     const { name, email, password } = req.body;
 
-    if (!validation.isValid(name)) return res.status(400).send({ status: false, message: "Name is required" });
-    if (!validation.isValid(email) || !isValidEmail(email.trim())) {
+    if (!validation.isValid(name)) {
+      return res.status(400).send({ status: false, message: "Name is required" });
+    }
+
+    if (!validation.isValid(email) || !validation.isValidEmail(email)) {
       return res.status(400).send({ status: false, message: "Valid email is required" });
     }
+
     if (!validation.isValid(password) || password.trim().length < 6) {
-      return res.status(400).send({ status: false, message: "Password must be at least 6 characters" });
+      return res.status(400).send({ status: false, message: "Password must be at least 6 characters long" });
     }
 
     const existing = await User.findOne({ email: email.trim() });
-    if (existing) return res.status(409).send({ status: false, message: "Email already registered" });
+    if (existing) {
+      return res.status(409).send({ status: false, message: "Email already registered" });
+    }
 
     const hashed = await bcrypt.hash(password.trim(), 10);
 
     const user = await User.create({
       name: name.trim(),
       email: email.trim(),
-      password: hashed
+      passwordHash: hashed
     });
 
     return res.status(201).send({
@@ -51,9 +55,11 @@ exports.login = async (req, res) => {
     }
 
     const { email, password } = req.body;
-    if (!validation.isValid(email) || !isValidEmail(email.trim())) {
+
+    if (!validation.isValid(email) || !validation.isValidEmail(email)) {
       return res.status(400).send({ status: false, message: "Valid email is required" });
     }
+
     if (!validation.isValid(password)) {
       return res.status(400).send({ status: false, message: "Password is required" });
     }
@@ -61,7 +67,7 @@ exports.login = async (req, res) => {
     const user = await User.findOne({ email: email.trim() });
     if (!user) return res.status(401).send({ status: false, message: "Invalid credentials" });
 
-    const match = await bcrypt.compare(password.trim(), user.password);
+    const match = await bcrypt.compare(password.trim(), user.passwordHash);
     if (!match) return res.status(401).send({ status: false, message: "Invalid credentials" });
 
     const accessToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "15m" });
@@ -89,8 +95,11 @@ exports.refreshToken = async (req, res) => {
 
     jwt.verify(token, process.env.REFRESH_TOKEN_SECRET || process.env.JWT_SECRET, (err, decoded) => {
       if (err) return res.status(403).send({ status: false, message: "Invalid refresh token" });
+
       const newAccess = jwt.sign({ id: decoded.id }, process.env.JWT_SECRET, { expiresIn: "15m" });
+
       res.cookie("accessToken", newAccess, { httpOnly: true, maxAge: 15 * 60 * 1000, sameSite: "lax" });
+
       return res.status(200).send({ status: true, message: "Token refreshed", token: newAccess });
     });
   } catch (err) {

@@ -1,4 +1,3 @@
-// utils/validation.js (minimal helpers)
 const mongoose = require("mongoose");
 
 const isValid = (value) => {
@@ -8,8 +7,7 @@ const isValid = (value) => {
 };
 
 const isValidRequestBody = (data) => {
-  if (!data) return false;
-  return Object.keys(data).length > 0;
+  return data && Object.keys(data).length > 0;
 };
 
 const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
@@ -28,10 +26,13 @@ const toBoolean = (val) => {
   return String(val).trim().toLowerCase() === "true";
 };
 
+const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+
 module.exports = {
   isValid,
   isValidRequestBody,
   isValidObjectId,
   isBooleanLike,
-  toBoolean
+  toBoolean,
+  isValidEmail
 };

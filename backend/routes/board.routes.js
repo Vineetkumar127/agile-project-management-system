@@ -1,12 +1,12 @@
 const express = require("express");
-const { createBoard, getBoards } = require("../controllers/board.controller");
 const { authMiddleware } = require("../middleware/auth.middleware");
-const { validateBoard } = require("../middleware/validate.middleware");
+const boardController = require("../controllers/board.controller");
 
 const router = express.Router();
 
-// Only logged-in users can create/get boards
-router.post("/", authMiddleware, validateBoard, createBoard);
-router.get("/", authMiddleware, getBoards);
+router.post("/", authMiddleware, boardController.createBoard);
+router.get("/:projectId", authMiddleware, boardController.getBoards);
+router.patch("/:boardId", authMiddleware, boardController.updateBoard);
+router.delete("/:boardId", authMiddleware, boardController.deleteBoard);
 
 module.exports = router;
