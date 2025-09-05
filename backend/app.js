@@ -6,7 +6,8 @@ const morgan = require("morgan");
 const authRoutes = require("./routes/auth.routes");
 const projectRoutes = require("./routes/project.routes");
 const boardRoutes = require("./routes/board.routes");
-
+const taskRoutes = require("./routes/task.routes");
+const commentRoutes = require("./routes/comment.routes");
 const app = express();
 
 app.use(express.json());
@@ -18,5 +19,7 @@ app.use(morgan("dev"));
 app.use("/api/auth", authRoutes);
 app.use("/api/projects", projectRoutes);
 app.use("/api/boards", boardRoutes);
+app.use("/api/tasks", taskRoutes);
+app.use("/api/comments", commentRoutes);
 
 module.exports = app;
